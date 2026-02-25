@@ -1,0 +1,118 @@
+# Claude Code
+.claude/
+.claude-cache/
+.claude/tmp/
+.claude/temp/
+.claude/logs/
+.claude/sessions/
+.claude/history/
+
+# Claude SDK
+.claude-sdk/
+.claude_sdk/
+.claude-sdk-cache/
+.claude_sdk_cache/
+
+# File temporanei Claude
+claude.json
+claude.local.json
+claude.config.local.json
+
+# Agent / AI temp
+.ai/
+.ai-cache/
+.ai-temp/
+.ai-logs/
+
+# Cache generiche
+.cache/
+.tmp/
+temp/
+tmp/
+
+# VSCode Claude extension
+.vscode/claude*
+tmpclaude*
+
+# Models cache (sentence-transformers, spaCy)
+models_cache/
+
+# ===================================
+# Email Ingestion Project
+# ===================================
+
+# Environment files (contain secrets)
+.env
+.env.local
+.env.production
+
+# OAuth2 tokens and credentials
+tokens/
+!config/*.json
+!docs/**/*.json
+
+# Redis backups
+backups/
+*.rdb
+*.aof
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.xml
+*.cover
+.hypothesis/
+htmlcov/
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+node_modules/
