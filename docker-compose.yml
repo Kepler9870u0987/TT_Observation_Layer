@@ -1,0 +1,99 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: obs_user
+      POSTGRES_PASSWORD: obs_pass
+      POSTGRES_DB: observation_layer
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U obs_user -d observation_layer"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://obs_user:obs_pass@postgres:5432/observation_layer
+      REDIS_URL: redis://redis:6379/0
+      ENV: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    working_dir: /app
+
+  worker:
+    build: .
+    command: celery -A src.worker.celery_app worker --loglevel=info -Q observations,promoter
+    environment:
+      DATABASE_URL: postgresql+asyncpg://obs_user:obs_pass@postgres:5432/observation_layer
+      REDIS_URL: redis://redis:6379/0
+      ENV: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    working_dir: /app
+
+  beat:
+    build: .
+    command: celery -A src.worker.celery_app beat --loglevel=info --scheduler celery.beat.PersistentScheduler
+    environment:
+      DATABASE_URL: postgresql+asyncpg://obs_user:obs_pass@postgres:5432/observation_layer
+      REDIS_URL: redis://redis:6379/0
+      ENV: development
+    depends_on:
+      - redis
+    volumes:
+      - .:/app
+    working_dir: /app
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres_data:
+  grafana_data:

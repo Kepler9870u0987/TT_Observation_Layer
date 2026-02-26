@@ -1,0 +1,29 @@
+# Promoter configuration
+# Soglie di promozione — sezione 5.2 del documento
+
+promoter:
+  # Regex lexicon (alta precisione)
+  regex_min_doc_freq: 3
+  regex_min_embedding_score: 0.35
+  regex_min_total_count: 5
+  regex_max_collision_labels: 1   # in >1 label → quarantena
+
+  # NER lexicon (precisione più bassa accettata)
+  ner_min_doc_freq: 2
+  ner_min_embedding_score: 0.25
+  ner_min_total_count: 3
+  ner_max_collision_labels: 2
+
+  # Hard limits
+  max_collision_labels: 2         # >2 label = quarantena automatica
+  min_total_count: 3              # below → rejected (rumore)
+
+# Alerting thresholds
+alerts:
+  collision_rate_max: 0.15
+  churn_rate_max: 0.30
+  promotion_rate_min: 0.02
+  promotion_rate_max: 0.50
+  unknown_topic_rate_max: 0.20
+  under_triage_rate_max: 0.10
+  validation_error_rate_max: 0.05
