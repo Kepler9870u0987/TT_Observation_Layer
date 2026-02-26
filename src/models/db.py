@@ -227,7 +227,7 @@ class PromotionEvent(Base):
 
     event_id: Mapped[str] = mapped_column(String(64), primary_key=True)
     run_id: Mapped[str | None] = mapped_column(
-        String(64), ForeignKey("pipeline_runs.run_id"), nullable=True
+        String(64), nullable=True  # promoter run_id — non referenzia pipeline_runs
     )
     label_id: Mapped[str] = mapped_column(String(128), nullable=False)
     lemma: Mapped[str] = mapped_column(String(256), nullable=False)

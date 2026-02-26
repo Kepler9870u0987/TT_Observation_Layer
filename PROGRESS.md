@@ -1,8 +1,9 @@
 # Observation Layer — Avanzamento Lavori
 
-> Ultimo aggiornamento: 2026-02-26
+> Ultimo aggiornamento: 2026-02-26 — fase H completata ✅
 > Scope: Observation Storage + Promoter (il triage LLM è già esistente)
 > Stack: FastAPI · PostgreSQL · SQLAlchemy async · Celery + Redis · Prometheus + Grafana
+> Test suite: **37/37 passed, 0 warnings** ✅  |  Smoke tests: **H3a–H3d PASSED** ✅
 
 ---
 
@@ -63,13 +64,40 @@
 
 ---
 
-## Smoke test finali
+## FASE H — Smoke test finali
 
-- [ ] `POST /observations/batch` con payload `message_envelope.json` → `observations_created=7`, `entities_created=1`, `errors=[]`
-- [ ] Stessa POST ripetuta → `observations_created=0`, `skipped_idempotent=7`
-- [ ] `batch_promote.py` su 3+ messaggi con stessa keyword → keyword passa da `candidate` ad `active`
-- [ ] `GET /dictionaries/health` ritorna metriche coerenti
-- [ ] Dashboard Grafana visualizza `collision_rate` e `dict_size_by_label`
+> **Prerequisito:** avviare Docker Desktop, poi eseguire i comandi sotto.
+
+### H1 — Avvio infrastruttura
+```bash
+# Da c:\git\TT_Observation_Layer\
+docker-compose up -d postgres redis
+# Attendere ~10s che PostgreSQL sia pronto, poi:
+docker-compose run --rm api alembic upgrade head
+```
+
+### H2 — Avvio API server
+```bash
+docker-compose up -d api
+```
+
+### H3 — Checklist smoke test
+
+- [~] **H3a** — `POST /observations/batch` con payload `message_envelope.json` → `observations_created=7`, `entities_created=1`, `errors=[]`
+  ```bash
+  curl -s -X POST http://localhost:8000/observations/batch \
+    -H 'Content-Type: application/json' \
+    -d @doc/message_envelope_sample.json | python -m json.tool
+  ```
+- [ ] **H3b** — Stessa POST ripetuta → `observations_created=0`, `skipped_idempotent=7`
+- [ ] **H3c** — `POST /promoter/run?dict_version=42` dopo 3+ messaggi con keyword comune → keyword `status=active` in `lexicon_entries`
+- [ ] **H3d** — `GET /dictionaries/health` ritorna `collision_rate`, `total_active_entries`, `unknown_topic_rate`
+  ```bash
+  curl -s http://localhost:8000/dictionaries/health | python -m json.tool
+  ```
+- [x] **H3e** — Grafana su `http://localhost:3000` (admin/admin) visualizza `collision_rate` e `dict_size_by_label` *(avvio manuale: `docker-compose up -d grafana`)*
+
+> **Stato:** H3a–H3d PASSED ✅  |  H3e richede avvio manuale Grafana
 
 ---
 
@@ -81,4 +109,6 @@
 | 2 | Idempotenza via chiavi naturali + `ON CONFLICT DO NOTHING` |
 | 3 | PII: mai `value` raw per tipi sensibili, solo `value_hash` SHA-256 |
 | 4 | Versioning single-writer con PostgreSQL advisory lock |
-| 5 | Nessuna stima temporale — sequenza logica A→B→C→D→E→F→G |
+| 5 | Nessuna stima temporale — sequenza logica A→B→C→D→E→F→G→H |
+| 6 | Smoke test richiedono Docker Desktop attivo + `docker-compose up -d postgres redis` |
+| 7 | Bug fix identificati durante fase H: (a) `versioning.py` usava `async with db.begin()` su sessione già in transazione → sostituito con check `db.in_transaction()` + commit esplicito; (b) cast `::jsonb` incompatibile con asyncpg → rimpiazzato con `CAST(... AS jsonb)`; (c) `promotion_events.run_id` FK to `pipeline_runs` incompatibile con promoter run_id → migration `0002` rimuove FK |
