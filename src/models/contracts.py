@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -33,6 +33,8 @@ class Span(BaseModel):
 
 class PipelineVersionPayload(BaseModel):
     """Payload serializzato di PipelineVersion ricevuto dal triage."""
+    model_config = ConfigDict(protected_namespaces=())
+
     dictionaryversion: int
     modelversion: str
     model_type: Literal["chat", "reasoning"] = "chat"
